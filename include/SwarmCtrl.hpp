@@ -2,29 +2,15 @@
 #define SWARMCTRL_SWARMCTRL_HPP
 
 #include <vector>
+#include <iostream>
 
-std::vector<double> operator+(const std::vector<double> &v1, const std::vector<double> &v2) {
-    std::vector<double> temp;
-    if (v1.size() != v2.size()) {
-        return temp;
-    }
-    for (int i = 0; i < v1.size(); ++i) {
-        temp.push_back(v1[i] + v2[i]);
-    }
-    return temp;
-}
+void printVec(const std::vector<double> &v);
 
-std::vector<double> operator+=(std::vector<double> &v1, const std::vector<double> &v2) {
-    std::vector<double> temp;
-    if (v1.size() != v2.size()) {
-        return temp;
-    }
-    for (int i = 0; i < v1.size(); ++i) {
-        temp.push_back(v1[i] + v2[i]);
-    }
-    v1 = temp;
-    return temp;
-}
+void printVec(const std::vector<std::vector<double>> &v);
+
+std::vector<double> operator+(const std::vector<double> &v1, const std::vector<double> &v2);
+
+std::vector<double> operator+=(std::vector<double> &v1, const std::vector<double> &v2);
 
 class SwarmCtrl {
 public:
@@ -50,8 +36,6 @@ protected:
     int maxIter_{};
     double rep_{}, atr_{}, Te_{};
     std::vector<double> borders_{};
-
-    inline std::vector<double> sys(const std::vector<double> &X, const std::vector<double> &U);
 
     inline std::vector<double> attractive(std::vector<double> posOptimal,
                                           std::vector<double> currentPos);
