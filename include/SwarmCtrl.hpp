@@ -49,6 +49,8 @@ protected:
 
     int maxIter_{};
     double rep_{}, atr_{}, Te_{};
+    double left_boundary, right_boundary, upper_boundary, lower_boundary;
+
     std::vector<double> borders_{};
 
     inline std::vector<double> sys(const std::vector<double> &X, const std::vector<double> &U);
