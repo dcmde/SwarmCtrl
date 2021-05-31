@@ -2,29 +2,17 @@
 #define SWARMCTRL_SWARMCTRL_HPP
 
 #include <vector>
+#include <iostream>
 
-std::vector<double> operator+(const std::vector<double> &v1, const std::vector<double> &v2) {
-    std::vector<double> temp;
-    if (v1.size() != v2.size()) {
-        return temp;
-    }
-    for (int i = 0; i < v1.size(); ++i) {
-        temp.push_back(v1[i] + v2[i]);
-    }
-    return temp;
-}
+void printVec(const std::vector<double> &v);
 
-std::vector<double> operator+=(std::vector<double> &v1, const std::vector<double> &v2) {
-    std::vector<double> temp;
-    if (v1.size() != v2.size()) {
-        return temp;
-    }
-    for (int i = 0; i < v1.size(); ++i) {
-        temp.push_back(v1[i] + v2[i]);
-    }
-    v1 = temp;
-    return temp;
-}
+void printVec(const std::vector<std::vector<double>> &v);
+
+std::vector<double> operator+(const std::vector<double> &v1, const std::vector<double> &v2);
+
+std::vector<double> operator+=(std::vector<double> &v1, const std::vector<double> &v2);
+
+std::vector<double> operator*(double gain, const std::vector<double> &v2);
 
 class SwarmCtrl {
 public:
@@ -39,7 +27,7 @@ public:
     void setMaxIteration(int maxIter);
 
     std::vector<double> getOptimalPosition(const std::vector<std::vector<double>> &initialPositionSwarm,
-                                           const std::vector<double> &yourPosition);
+                                           const std::vector<double> &yourPosition) const;
 
     std::vector<double> getLocalGradientDirection(std::vector<std::vector<double>> currentPosition,
                                                   std::vector<double> optimalPosition,
@@ -49,22 +37,18 @@ protected:
 
     int maxIter_{};
     double rep_{}, atr_{}, Te_{};
-    double left_boundary, right_boundary, upper_boundary, lower_boundary;
-
-    std::vector<double> borders_{};
-
-    inline std::vector<double> sys(const std::vector<double> &X, const std::vector<double> &U);
+    double left_boundary{}, right_boundary{}, upper_boundary{}, lower_boundary{};
 
     inline std::vector<double> attractive(std::vector<double> posOptimal,
                                           std::vector<double> currentPos);
 
-    inline std::vector<double> border(std::vector<double> currentPos);
+    inline std::vector<double> border(std::vector<double> currentPos) const;
 
-    inline std::vector<double> repulsive(std::vector<double> otherDrones,
+    static inline std::vector<double> repulsive(std::vector<double> otherDrones,
                                          std::vector<double> currentPos);
 
-    inline std::vector<double> repulsive(std::vector<std::vector<double>> otherDrones,
-                                         std::vector<double> currentPos);
+    static inline std::vector<double> repulsive(const std::vector<std::vector<double>>& otherDrones,
+                                         const std::vector<double>& currentPos);
 };
 
 #endif //SWARMCTRL_SWARMCTRL_HPP
