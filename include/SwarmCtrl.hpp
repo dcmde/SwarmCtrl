@@ -29,9 +29,9 @@ public:
     std::vector<double> getOptimalPosition(const std::vector<std::vector<double>> &initialPositionSwarm,
                                            const std::vector<double> &yourPosition) const;
 
-    std::vector<double> getLocalGradientDirection(std::vector<std::vector<double>> currentPosition,
+    std::vector<double> getLocalGradientDirection(const std::vector<std::vector<double>>& otherDrones,
                                                   std::vector<double> optimalPosition,
-                                                  std::vector<double> yourPosition);
+                                                  const std::vector<double>& currentPos);
 
 protected:
 
@@ -39,7 +39,7 @@ protected:
     double rep_{}, atr_{}, Te_{};
     double left_boundary{}, right_boundary{}, upper_boundary{}, lower_boundary{};
 
-    inline std::vector<double> attractive(std::vector<double> posOptimal,
+    static inline std::vector<double> attractive(std::vector<double> posOptimal,
                                           std::vector<double> currentPos);
 
     inline std::vector<double> border(std::vector<double> currentPos) const;

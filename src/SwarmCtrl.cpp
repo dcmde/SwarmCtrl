@@ -98,7 +98,7 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
                 if (k == j) {
                     continue;
                 }
-                U +=  repulsive(swarm_coords[k], swarm_coords[j]);
+                U += repulsive(swarm_coords[k], swarm_coords[j]);
             }
             // Border computation
             U += border(swarm_coords[j]);
@@ -120,12 +120,13 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
     return pos;
 }
 
-std::vector<double> SwarmCtrl::getLocalGradientDirection(std::vector<std::vector<double>> currentPosition,
+std::vector<double> SwarmCtrl::getLocalGradientDirection(const std::vector<std::vector<double>> &otherDrones,
                                                          std::vector<double> optimalPosition,
-                                                         std::vector<double> yourPosition) {
-    std::vector<double> U;
-    U = repulsive(currentPosition, yourPosition);
-    U += attractive(std::move(optimalPosition), yourPosition);
+                                                         const std::vector<double> &currentPos) {
+    std::vector<double> U(2, 0);
+    U = repulsive(otherDrones, currentPos);
+    U += border(currentPos);
+    U += attractive(std::move(optimalPosition), currentPos);
     return U;
 }
 
@@ -139,8 +140,13 @@ std::vector<double> SwarmCtrl::attractive(std::vector<double> posOptimal, std::v
 
 std::vector<double> SwarmCtrl::border(std::vector<double> currentPos) const {
     std::vector<double> temp(2);
-    temp[0] = (exp(-currentPos[2] + left_boundary) - exp(currentPos[2] - right_boundary));
-    temp[1] = (exp(-currentPos[3] + lower_boundary) - exp(currentPos[3] - upper_boundary));
+    if (currentPos.size() == 4) {
+        temp[0] = (exp(-currentPos[2] + left_boundary) - exp(currentPos[2] - right_boundary));
+        temp[1] = (exp(-currentPos[3] + lower_boundary) - exp(currentPos[3] - upper_boundary));
+    } else {
+        temp[0] = (exp(-currentPos[0] + left_boundary) - exp(currentPos[0] - right_boundary));
+        temp[1] = (exp(-currentPos[1] + lower_boundary) - exp(currentPos[1] - upper_boundary));
+    }
     return temp;
 }
 
@@ -156,11 +162,16 @@ std::vector<double> SwarmCtrl::repulsive(std::vector<double> otherDrones, std::v
     return temp;
 }
 
-std::vector<double>
-SwarmCtrl::repulsive(const std::vector<std::vector<double>> &otherDrones, const std::vector<double> &currentPos) {
+std::vector<double> SwarmCtrl::repulsive(const std::vector<std::vector<double>> &otherDrones,
+                                         const std::vector<double> &currentPos) {
     std::vector<double> temp;
     for (const auto &it : otherDrones) {
-        temp += repulsive(it, currentPos);
+        double norm = pow(pow(currentPos[0] - it[0], 2) + pow(currentPos[1] - it[1], 2), 2);
+        if (norm < 1e-15) {
+            continue;
+        }
+        temp[0] += (currentPos[0] - it[0]) / norm;
+        temp[1] += (currentPos[1] - it[1]) / norm;
     }
     return temp;
 }
