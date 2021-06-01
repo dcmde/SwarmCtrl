@@ -2,8 +2,6 @@
 #include <fstream>
 #include <sstream>
 
-#define PRINT_DEBUG
-
 void split(const std::string &str, std::vector<double> &vec, char delim = ' ') {
     double val;
     std::stringstream ss(str);

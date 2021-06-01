@@ -120,6 +120,12 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
             auto X = sysUpdate(swarm_coords[j], Uvec[j]);
             if (std::abs(swarm_coords[j][2] - X[2]) > 50 or std::abs(swarm_coords[j][3] - X[3]) > 50) {
                 throw "Optimization diverge";
+            } else if (std::abs(swarm_coords[j][2] - X[2]) < 1e-10 and std::abs(swarm_coords[j][3] - X[3]) < 1e-10 and
+                       std::abs(X[0]) < 1e-10 and std::abs(X[1]) < 1e-10) {
+                pos[0] = swarm_coords[n - 1][2];
+                pos[1] = swarm_coords[n - 1][3];
+                std::cout << swarm_coords[j][2] - X[2] << " " << swarm_coords[j][3] - X[3] << " " << i << std::endl;
+                return pos;
             }
             swarm_coords[j] = X;
         }
