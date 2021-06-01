@@ -34,6 +34,17 @@ std::vector<double> operator+(const std::vector<double> &v1, const std::vector<d
     return temp;
 }
 
+std::vector<double> operator-(const std::vector<double> &v1, const std::vector<double> &v2) {
+    std::vector<double> temp;
+    if (v1.size() != v2.size()) {
+        return temp;
+    }
+    for (int i = 0; i < v1.size(); ++i) {
+        temp.push_back(v1[i] - v2[i]);
+    }
+    return temp;
+}
+
 std::vector<double> operator+=(std::vector<double> &v1, const std::vector<double> &v2) {
     std::vector<double> temp;
     if (v1.size() != v2.size()) {
@@ -106,17 +117,15 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
         }
         // System dynamic update
         for (int j = 0; j < n; ++j) {
-            temp[0] = -swarm_coords[j][0] + Uvec[j][0]; //Vx
-            temp[1] = -swarm_coords[j][1] + Uvec[j][1]; //Vy
-            temp[2] = swarm_coords[j][2] + swarm_coords[j][0] * Te_; //X
-            temp[3] = swarm_coords[j][3] + swarm_coords[j][1] * Te_; //Y
-            // Update vector
-            swarm_coords[j] = temp;
+            auto X = sysUpdate(swarm_coords[j], Uvec[j]);
+            if (std::abs(swarm_coords[j][2] - X[2]) > 50 or std::abs(swarm_coords[j][3] - X[3]) > 50) {
+                throw "Optimization diverge";
+            }
+            swarm_coords[j] = X;
         }
     }
     pos[0] = swarm_coords[n - 1][2];
     pos[1] = swarm_coords[n - 1][3];
-    printVec(swarm_coords);
     return pos;
 }
 
@@ -133,6 +142,9 @@ std::vector<double> SwarmCtrl::getLocalGradientDirection(const std::vector<std::
 std::vector<double> SwarmCtrl::attractive(std::vector<double> posOptimal, std::vector<double> currentPos) {
     std::vector<double> temp;
     double norm = pow((currentPos[0] - posOptimal[0]), 2) + pow((currentPos[1] - posOptimal[1]), 2);
+    if (norm < 1e-15) {
+        throw "attractive divide by 0";
+    }
     temp.push_back((-currentPos[0] + posOptimal[0]) / norm);
     temp.push_back((-currentPos[1] + posOptimal[1]) / norm);
     return temp;
@@ -155,7 +167,7 @@ std::vector<double> SwarmCtrl::repulsive(std::vector<double> otherDrones, std::v
     double norm = pow(pow(currentPos[2] - otherDrones[2], 2) + pow(currentPos[3] - otherDrones[3], 2), 2);
 
     if (norm < 1e-15) {
-        return std::vector<double>(2, 0);
+        throw "repulsive divide by 0";
     }
     temp[0] = (currentPos[2] - otherDrones[2]) / norm;
     temp[1] = (currentPos[3] - otherDrones[3]) / norm;
@@ -173,5 +185,14 @@ std::vector<double> SwarmCtrl::repulsive(const std::vector<std::vector<double>> 
         temp[0] += (currentPos[0] - it[0]) / norm;
         temp[1] += (currentPos[1] - it[1]) / norm;
     }
+    return temp;
+}
+
+std::vector<double> SwarmCtrl::sysUpdate(std::vector<double> X, std::vector<double> U) const {
+    std::vector<double> temp(4, 0);
+    temp[0] = -X[0] + U[0]; //Vx
+    temp[1] = -X[1] + U[1]; //Vy
+    temp[2] = X[2] + X[0] * Te_; //X
+    temp[3] = X[3] + X[1] * Te_; //Y
     return temp;
 }

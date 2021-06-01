@@ -1,20 +1,71 @@
 #include <SwarmCtrl.hpp>
+#include <fstream>
+#include <sstream>
 
-int main() {
-    std::vector<std::vector<double>> vec(1);
-    vec[0] = std::vector<double>({-1, 0});
-//    vec[1] = std::vector<double>({1, 0});
-//    vec[2] = std::vector<double>({-1, 0});
+#define PRINT_DEBUG
 
-    std::vector<double> uPos({1, 0});
+void split(const std::string &str, std::vector<double> &vec, char delim = ' ') {
+    double val;
+    std::stringstream ss(str);
+    std::string token;
 
+    while (std::getline(ss, token, delim)) {
+        val = std::stod(token);
+        vec.push_back(val);
+    }
+}
+
+int main(int argc, char *argv[]) {
+    std::vector<std::vector<double>> vecInit;
+    std::vector<double> vecTemp, uPos;
     SwarmCtrl swarmCtrl;
-    swarmCtrl.setRepParam(10);
-    swarmCtrl.setAttractParam(1);
-    swarmCtrl.setMaxIteration(900);
-    swarmCtrl.setSampleTime(0.05);
-    swarmCtrl.setBorders(std::vector<double>({2, 0, 2, 0}));
-    auto it = swarmCtrl.getOptimalPosition(vec, uPos);
-    printVec(it);
+
+    int maxIter, n;
+    double repParam, sampleTime, upper, lower, right, left;
+
+
+//    swarmCtrl.getOptimalPosition(vec, uPos);
+//
+//    printVec(swarmCtrl.getOptimalPosition(vec, uPos));
+
+    std::ofstream ofstream("swarmCoords.txt");
+    std::string line;
+
+    if (argc != 8) {
+        std::cout << "Enter : maxIter repParam sampleTime upper lower right left" << std::endl;
+        return 0;
+    }
+
+    std::ifstream ifstream("swarmInitPos.txt");
+
+    if (!ifstream.is_open()) {
+        std::cout << "Cannot find swarmInitPos.txt" << std::endl;
+        return 0;
+    }
+
+    maxIter = std::stoi(argv[1]);
+    repParam = std::stod(argv[2]);
+    sampleTime = std::stod(argv[3]);
+    upper = std::stod(argv[4]);
+    lower = std::stod(argv[5]);
+    right = std::stod(argv[6]);
+    left = std::stod(argv[7]);
+
+    swarmCtrl.setRepParam(repParam);
+    swarmCtrl.setMaxIteration(maxIter);
+    swarmCtrl.setSampleTime(sampleTime);
+    swarmCtrl.setBorders(std::vector<double>({upper, lower, right, left}));
+
+    while (std::getline(ifstream, line)) {
+        vecTemp.clear();
+        split(line, vecTemp);
+        vecInit.push_back(vecTemp);
+    }
+    uPos = vecInit[0];
+    vecInit.erase(vecInit.begin());
+    n = vecInit.size();
+
+    printVec(swarmCtrl.getOptimalPosition(vecInit, uPos));
+
     return 0;
 }
