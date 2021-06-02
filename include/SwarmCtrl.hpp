@@ -16,7 +16,23 @@ std::vector<double> operator+=(std::vector<double> &v1, const std::vector<double
 
 std::vector<double> operator*(double gain, const std::vector<double> &v2);
 
-class SwarmCtrl {
+class FieldGradientEquations {
+public:
+
+    static std::vector<double> attractive(std::vector<double> posOptimal,
+                                          std::vector<double> currentPos);
+
+    static std::vector<double> boundary(std::vector<double> currentPos, std::vector<double> boundary);
+
+    static std::vector<double> repulsive(std::vector<double> otherDrones,
+                                         std::vector<double> currentPos);
+
+    static std::vector<double> repulsive(const std::vector<std::vector<double>> &otherDrones,
+                                         const std::vector<double> &currentPos);
+
+};
+
+class SwarmCtrl : public FieldGradientEquations {
 public:
     void setSampleTime(double Te);
 
@@ -40,17 +56,7 @@ protected:
     int maxIter_{};
     double rep_{}, atr_{}, Te_{};
     double left_boundary{}, right_boundary{}, upper_boundary{}, lower_boundary{};
-
-    static inline std::vector<double> attractive(std::vector<double> posOptimal,
-                                                 std::vector<double> currentPos);
-
-    inline std::vector<double> border(std::vector<double> currentPos) const;
-
-    static inline std::vector<double> repulsive(std::vector<double> otherDrones,
-                                                std::vector<double> currentPos);
-
-    static inline std::vector<double> repulsive(const std::vector<std::vector<double>> &otherDrones,
-                                                const std::vector<double> &currentPos);
+    std::vector<double> boundary_limit{};
 
     inline std::vector<double> sysUpdate(std::vector<double> X, std::vector<double> U) const;
 };

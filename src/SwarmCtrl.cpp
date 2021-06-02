@@ -19,6 +19,63 @@ void printVec(const std::vector<std::vector<double>> &v) {
     std::cout << std::endl;
 }
 
+std::vector<double> FieldGradientEquations::attractive(std::vector<double> posOptimal, std::vector<double> currentPos) {
+    std::vector<double> temp;
+    double norm = pow((currentPos[0] - posOptimal[0]), 2) + pow((currentPos[1] - posOptimal[1]), 2);
+    if (norm < 1e-15) {
+        throw "attractive divide by 0";
+    }
+    temp.push_back((-currentPos[0] + posOptimal[0]) / norm);
+    temp.push_back((-currentPos[1] + posOptimal[1]) / norm);
+    return temp;
+}
+
+std::vector<double> FieldGradientEquations::boundary(std::vector<double> currentPos,
+                                                     std::vector<double> boundary) {
+    double upper_boundary, right_boundary, left_boundary, lower_boundary;
+    std::vector<double> temp(2);
+
+    upper_boundary = boundary[0];
+    lower_boundary = boundary[1];
+    right_boundary = boundary[2];
+    left_boundary = boundary[3];
+
+    if (currentPos.size() == 4) {
+        temp[0] = (exp(-currentPos[2] + left_boundary) - exp(currentPos[2] - right_boundary));
+        temp[1] = (exp(-currentPos[3] + lower_boundary) - exp(currentPos[3] - upper_boundary));
+    } else {
+        temp[0] = (exp(-currentPos[0] + left_boundary) - exp(currentPos[0] - right_boundary));
+        temp[1] = (exp(-currentPos[1] + lower_boundary) - exp(currentPos[1] - upper_boundary));
+    }
+    return temp;
+}
+
+std::vector<double> FieldGradientEquations::repulsive(std::vector<double> otherDrones, std::vector<double> currentPos) {
+    std::vector<double> temp(2, 0);
+    double norm = pow(pow(currentPos[2] - otherDrones[2], 2) + pow(currentPos[3] - otherDrones[3], 2), 2);
+
+    if (norm < 1e-15) {
+        throw "repulsive divide by 0";
+    }
+    temp[0] = (currentPos[2] - otherDrones[2]) / norm;
+    temp[1] = (currentPos[3] - otherDrones[3]) / norm;
+    return temp;
+}
+
+std::vector<double> FieldGradientEquations::repulsive(const std::vector<std::vector<double>> &otherDrones,
+                                                      const std::vector<double> &currentPos) {
+    std::vector<double> temp;
+    for (const auto &it : otherDrones) {
+        double norm = pow(pow(currentPos[0] - it[0], 2) + pow(currentPos[1] - it[1], 2), 2);
+        if (norm < 1e-15) {
+            continue;
+        }
+        temp[0] += (currentPos[0] - it[0]) / norm;
+        temp[1] += (currentPos[1] - it[1]) / norm;
+    }
+    return temp;
+}
+
 void SwarmCtrl::setSampleTime(double Te) {
     Te_ = Te;
 }
@@ -70,6 +127,11 @@ void SwarmCtrl::setBorders(const std::vector<double> &borders) {
     lower_boundary = borders[1];
     right_boundary = borders[2];
     left_boundary = borders[3];
+    boundary_limit.clear();
+    boundary_limit.push_back(upper_boundary);
+    boundary_limit.push_back(lower_boundary);
+    boundary_limit.push_back(right_boundary);
+    boundary_limit.push_back(left_boundary);
 }
 
 void SwarmCtrl::setRepParam(const double repulsion) {
@@ -112,7 +174,7 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
                 U += repulsive(swarm_coords[k], swarm_coords[j]);
             }
             // Border computation
-            U += border(swarm_coords[j]);
+            U += boundary(swarm_coords[j], boundary_limit);
             Uvec[j] = U;
         }
         // System dynamic update
@@ -140,58 +202,9 @@ std::vector<double> SwarmCtrl::getLocalGradientDirection(const std::vector<std::
                                                          const std::vector<double> &currentPos) {
     std::vector<double> U(2, 0);
     U = repulsive(otherDrones, currentPos);
-    U += border(currentPos);
+    U += boundary(currentPos, boundary_limit);
     U += attractive(std::move(optimalPosition), currentPos);
     return U;
-}
-
-std::vector<double> SwarmCtrl::attractive(std::vector<double> posOptimal, std::vector<double> currentPos) {
-    std::vector<double> temp;
-    double norm = pow((currentPos[0] - posOptimal[0]), 2) + pow((currentPos[1] - posOptimal[1]), 2);
-    if (norm < 1e-15) {
-        throw "attractive divide by 0";
-    }
-    temp.push_back((-currentPos[0] + posOptimal[0]) / norm);
-    temp.push_back((-currentPos[1] + posOptimal[1]) / norm);
-    return temp;
-}
-
-std::vector<double> SwarmCtrl::border(std::vector<double> currentPos) const {
-    std::vector<double> temp(2);
-    if (currentPos.size() == 4) {
-        temp[0] = (exp(-currentPos[2] + left_boundary) - exp(currentPos[2] - right_boundary));
-        temp[1] = (exp(-currentPos[3] + lower_boundary) - exp(currentPos[3] - upper_boundary));
-    } else {
-        temp[0] = (exp(-currentPos[0] + left_boundary) - exp(currentPos[0] - right_boundary));
-        temp[1] = (exp(-currentPos[1] + lower_boundary) - exp(currentPos[1] - upper_boundary));
-    }
-    return temp;
-}
-
-std::vector<double> SwarmCtrl::repulsive(std::vector<double> otherDrones, std::vector<double> currentPos) {
-    std::vector<double> temp(2, 0);
-    double norm = pow(pow(currentPos[2] - otherDrones[2], 2) + pow(currentPos[3] - otherDrones[3], 2), 2);
-
-    if (norm < 1e-15) {
-        throw "repulsive divide by 0";
-    }
-    temp[0] = (currentPos[2] - otherDrones[2]) / norm;
-    temp[1] = (currentPos[3] - otherDrones[3]) / norm;
-    return temp;
-}
-
-std::vector<double> SwarmCtrl::repulsive(const std::vector<std::vector<double>> &otherDrones,
-                                         const std::vector<double> &currentPos) {
-    std::vector<double> temp;
-    for (const auto &it : otherDrones) {
-        double norm = pow(pow(currentPos[0] - it[0], 2) + pow(currentPos[1] - it[1], 2), 2);
-        if (norm < 1e-15) {
-            continue;
-        }
-        temp[0] += (currentPos[0] - it[0]) / norm;
-        temp[1] += (currentPos[1] - it[1]) / norm;
-    }
-    return temp;
 }
 
 std::vector<double> SwarmCtrl::sysUpdate(std::vector<double> X, std::vector<double> U) const {
