@@ -29,8 +29,8 @@ int main(int argc, char *argv[]) {
     std::ofstream ofstream("swarmCoords.txt");
     std::string line;
 
-    if (argc != 8) {
-        std::cout << "Enter : maxIter repParam sampleTime upper lower right left" << std::endl;
+    if (argc != 7) {
+        std::cout << "Enter : maxIter repParam upper lower right left" << std::endl;
         return 0;
     }
 
@@ -43,15 +43,13 @@ int main(int argc, char *argv[]) {
 
     maxIter = std::stoi(argv[1]);
     repParam = std::stod(argv[2]);
-    sampleTime = std::stod(argv[3]);
-    upper = std::stod(argv[4]);
-    lower = std::stod(argv[5]);
-    right = std::stod(argv[6]);
-    left = std::stod(argv[7]);
+    upper = std::stod(argv[3]);
+    lower = std::stod(argv[4]);
+    right = std::stod(argv[5]);
+    left = std::stod(argv[6]);
 
     swarmCtrl.setRepParam(repParam);
     swarmCtrl.setMaxIteration(maxIter);
-    swarmCtrl.setSampleTime(sampleTime);
     swarmCtrl.setBorders(std::vector<double>({upper, lower, right, left}));
 
     while (std::getline(ifstream, line)) {

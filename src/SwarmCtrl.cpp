@@ -76,10 +76,6 @@ std::vector<double> FieldGradientEquations::repulsive(const std::vector<std::vec
     return temp;
 }
 
-void SwarmCtrl::setSampleTime(double Te) {
-    Te_ = Te;
-}
-
 std::vector<double> operator+(const std::vector<double> &v1, const std::vector<double> &v2) {
     std::vector<double> temp;
     if (v1.size() != v2.size()) {
@@ -134,14 +130,6 @@ void SwarmCtrl::setBorders(const std::vector<double> &borders) {
     boundary_limit.push_back(left_boundary);
 }
 
-void SwarmCtrl::setRepParam(const double repulsion) {
-    rep_ = repulsion;
-}
-
-void SwarmCtrl::setAttractParam(const double attract) {
-    atr_ = attract;
-}
-
 void SwarmCtrl::setMaxIteration(const int maxIter) {
     maxIter_ = maxIter;
 }
@@ -171,7 +159,7 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
                 if (k == j) {
                     continue;
                 }
-                U += repulsive(swarm_coords[k], swarm_coords[j]);
+                U += rep_*repulsive(swarm_coords[k], swarm_coords[j]);
             }
             // Border computation
             U += boundary(swarm_coords[j], boundary_limit);
@@ -194,6 +182,8 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
     }
     pos[0] = swarm_coords[n - 1][2];
     pos[1] = swarm_coords[n - 1][3];
+    std::cout<< "finaleeeeeeee"<<std::endl;
+    printVec(swarm_coords);
     return pos;
 }
 
@@ -208,10 +198,28 @@ std::vector<double> SwarmCtrl::getLocalGradientDirection(const std::vector<std::
 }
 
 std::vector<double> SwarmCtrl::sysUpdate(std::vector<double> X, std::vector<double> U) const {
+    double ax,ay;
+    ax=adaptifRate(U[0]);
+    ay=adaptifRate(U[1]);
+    
     std::vector<double> temp(4, 0);
     temp[0] = -X[0] + U[0]; //Vx
     temp[1] = -X[1] + U[1]; //Vy
-    temp[2] = X[2] + X[0] * Te_; //X
-    temp[3] = X[3] + X[1] * Te_; //Y
+    temp[2] = X[2] + X[0] * ax; //X
+    temp[3] = X[3] + X[1] * ay; //Y
     return temp;
+}
+
+double SwarmCtrl::adaptifRate(double a) {
+    if (std::abs(a) < 1e-6) {
+        a = 1e-6;
+    } else if (std::abs(a) > 1e2) {
+        a = 1e2;
+    }
+    return 1e-1/std::abs(a);
+}
+
+void SwarmCtrl::setRepParam(double repulsion) {
+    rep_=repulsion;
+
 }

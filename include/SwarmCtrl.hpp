@@ -34,13 +34,10 @@ public:
 
 class SwarmCtrl : public FieldGradientEquations {
 public:
-    void setSampleTime(double Te);
 
     void setBorders(const std::vector<double> &borders);
 
     void setRepParam(double repulsion);
-
-    void setAttractParam(double attract);
 
     void setMaxIteration(int maxIter);
 
@@ -54,10 +51,9 @@ public:
 protected:
 
     int maxIter_{};
-    double rep_{}, atr_{}, Te_{};
-    double left_boundary{}, right_boundary{}, upper_boundary{}, lower_boundary{};
+    double left_boundary{}, right_boundary{}, upper_boundary{}, lower_boundary{}, rep_{};
     std::vector<double> boundary_limit{};
-
+    static inline double adaptifRate (double a);
     inline std::vector<double> sysUpdate(std::vector<double> X, std::vector<double> U) const;
 };
 
