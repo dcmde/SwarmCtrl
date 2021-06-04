@@ -61,8 +61,6 @@ std::vector<double> FieldGradientEquations::repulsive(std::vector<double> otherD
 std::vector<double> FieldGradientEquations::repulsive(const std::vector<std::vector<double>> &otherDrones,
                                                       const std::vector<double> &currentPos) {
     std::vector<double> temp(2, 0);
-    printVec(otherDrones);
-    printVec(currentPos);
     for (const auto &it : otherDrones) {
         double norm = pow(pow(currentPos[0] - it[0], 2) + pow(currentPos[1] - it[1], 2), 2);
         if (norm < 1e-15) {
