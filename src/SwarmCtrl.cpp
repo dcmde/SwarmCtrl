@@ -172,7 +172,6 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
                        std::abs(X[0]) < 1e-10 and std::abs(X[1]) < 1e-10) {
                 pos[0] = swarm_coords[n - 1][2];
                 pos[1] = swarm_coords[n - 1][3];
-                std::cout << swarm_coords[j][2] - X[2] << " " << swarm_coords[j][3] - X[3] << " " << i << std::endl;
                 return pos;
             }
             swarm_coords[j] = X;
@@ -180,8 +179,6 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
     }
     pos[0] = swarm_coords[n - 1][2];
     pos[1] = swarm_coords[n - 1][3];
-    std::cout<< "finaleeeeeeee"<<std::endl;
-    printVec(swarm_coords);
     return pos;
 }
 
