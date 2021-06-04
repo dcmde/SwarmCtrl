@@ -21,12 +21,8 @@ void printVec(const std::vector<std::vector<double>> &v) {
 
 std::vector<double> FieldGradientEquations::attractive(std::vector<double> posOptimal, std::vector<double> currentPos) {
     std::vector<double> temp;
-    double norm = pow((currentPos[0] - posOptimal[0]), 2) + pow((currentPos[1] - posOptimal[1]), 2);
-    if (norm < 1e-15) {
-        throw "attractive divide by 0";
-    }
-    temp.push_back((-currentPos[0] + posOptimal[0]) / norm);
-    temp.push_back((-currentPos[1] + posOptimal[1]) / norm);
+    temp.push_back((-currentPos[0] + posOptimal[0]));
+    temp.push_back((-currentPos[1] + posOptimal[1]));
     return temp;
 }
 
