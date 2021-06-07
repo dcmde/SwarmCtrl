@@ -216,6 +216,11 @@ double SwarmCtrl::adaptiveRate(double norm, double threshold) {
     return 1 / norm;
 }
 
+/**
+ * @about Compute the euclidean norm of a vector
+ * @param vec
+ * @return Return the euclidean norm
+ */
 double SwarmCtrl::vecNorm(const std::vector<double> &vec) const {
     double norm = 0;
     for (const auto &it : vec) {
@@ -224,6 +229,12 @@ double SwarmCtrl::vecNorm(const std::vector<double> &vec) const {
     return sqrt(norm);
 }
 
+/**
+ * @about Compute the xk+1 of a system with first order dynamic for the speed and integrator for the position.
+ * @param X Current state
+ * @param U Command to apply
+ * @return Next step given by the recurrence equation Xk+1 = F.Xk + G.Uk
+ */
 std::vector<double> SwarmCtrl::sysUpdate(std::vector<double> X, std::vector<double> U) const {
     std::vector<double> temp(4, 0);
     temp[0] = 0.9 * X[0] + 0.1 * U[0]; //Vx
