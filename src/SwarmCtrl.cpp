@@ -72,6 +72,32 @@ std::vector<double> FieldGradientEquations::repulsive(const std::vector<std::vec
     return temp;
 }
 
+/**
+ * @about Depending of the norm value we want to have a gain that is normalizing the vector until the norm is very low.
+ * At this point we have a constant gain 1/S
+ * @param norm The norm of a vector
+ * @return 1/N if N > S or 1/S
+ */
+double FieldGradientEquations::adaptiveRate(double norm, double threshold) {
+    if (norm < threshold) {
+        return 1 / threshold;
+    }
+    return 1 / norm;
+}
+
+/**
+ * @about Compute the euclidean norm of a vector
+ * @param vec
+ * @return Return the euclidean norm
+ */
+double FieldGradientEquations::vecNorm(const std::vector<double> &vec) {
+    double norm = 0;
+    for (const auto &it : vec) {
+        norm += pow(it, 2);
+    }
+    return sqrt(norm);
+}
+
 std::vector<double> operator+(const std::vector<double> &v1, const std::vector<double> &v2) {
     std::vector<double> temp;
     if (v1.size() != v2.size()) {
@@ -201,32 +227,6 @@ std::vector<double> SwarmCtrl::getLocalGradientDirection(const std::vector<std::
     U += boundary(currentPos, boundary_limit);
     U += attractive(std::move(optimalPosition), currentPos);
     return U;
-}
-
-/**
- * @about Depending of the norm value we want to have a gain that is normalizing the vector until the norm is very low.
- * At this point we have a constant gain 1/S
- * @param norm The norm of a vector
- * @return 1/N if N > S or 1/S
- */
-double SwarmCtrl::adaptiveRate(double norm, double threshold) {
-    if (norm < threshold) {
-        return 1 / threshold;
-    }
-    return 1 / norm;
-}
-
-/**
- * @about Compute the euclidean norm of a vector
- * @param vec
- * @return Return the euclidean norm
- */
-double SwarmCtrl::vecNorm(const std::vector<double> &vec) const {
-    double norm = 0;
-    for (const auto &it : vec) {
-        norm += pow(it, 2);
-    }
-    return sqrt(norm);
 }
 
 /**

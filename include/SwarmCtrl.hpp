@@ -30,6 +30,10 @@ public:
     static std::vector<double> repulsive(const std::vector<std::vector<double>> &otherDrones,
                                          const std::vector<double> &currentPos);
 
+    static double adaptiveRate(double a, double threshold);
+
+    static double vecNorm(const std::vector<double> &vec);
+
 };
 
 class SwarmCtrl : public FieldGradientEquations {
@@ -53,10 +57,6 @@ protected:
     int maxIter_{};
     double left_boundary{}, right_boundary{}, upper_boundary{}, lower_boundary{}, rep_{};
     std::vector<double> boundary_limit{};
-
-    static inline double adaptiveRate(double a, double threshold);
-
-    inline double vecNorm(const std::vector<double> &vec) const;
 
     inline std::vector<double> sysUpdate(std::vector<double> X, std::vector<double> U) const;
 };
