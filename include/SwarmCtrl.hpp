@@ -53,7 +53,11 @@ protected:
     int maxIter_{};
     double left_boundary{}, right_boundary{}, upper_boundary{}, lower_boundary{}, rep_{};
     std::vector<double> boundary_limit{};
-    static inline double adaptifRate (double a);
+
+    static inline double adaptiveRate(double a);
+
+    inline double vecNorm(const std::vector<double> &vec) const;
+
     inline std::vector<double> sysUpdate(std::vector<double> X, std::vector<double> U) const;
 };
 
