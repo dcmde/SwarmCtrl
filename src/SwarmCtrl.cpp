@@ -176,7 +176,7 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
             // Border computation
             Ubnd += boundary(swarm_coords[j], boundary_limit);
             U = Urep + Ubnd;
-            Uvec[j] = adaptiveRate(vecNorm(U)) * U;
+            Uvec[j] = adaptiveRate(vecNorm(U), 1e-4) * U;
         }
         // System dynamic update
         for (int j = 0; j < n; ++j) {
@@ -184,12 +184,6 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
             if (std::abs(swarm_coords[j][2] - X[2]) > 50 or std::abs(swarm_coords[j][3] - X[3]) > 50) {
                 throw "Optimization diverge";
             }
-//            } else if (vecNorm(Uvec[j]) < 1e-5) {
-//                pos[0] = swarm_coords[n - 1][2];
-//                pos[1] = swarm_coords[n - 1][3];
-//                printVec(swarm_coords);
-//                return pos;
-//            }
             swarm_coords[j] = X;
         }
     }
@@ -209,10 +203,15 @@ std::vector<double> SwarmCtrl::getLocalGradientDirection(const std::vector<std::
     return U;
 }
 
-double SwarmCtrl::adaptiveRate(double norm) {
-    double S = 1e-4;
-    if (norm < S) {
-        return 1 / S;
+/**
+ * @about Depending of the norm value we want to have a gain that is normalizing the vector until the norm is very low.
+ * At this point we have a constant gain 1/S
+ * @param norm The norm of a vector
+ * @return 1/N if N > S or 1/S
+ */
+double SwarmCtrl::adaptiveRate(double norm, double threshold) {
+    if (norm < threshold) {
+        return 1 / threshold;
     }
     return 1 / norm;
 }
