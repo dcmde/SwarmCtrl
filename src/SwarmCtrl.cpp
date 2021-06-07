@@ -116,6 +116,14 @@ std::vector<double> operator*(double gain, const std::vector<double> &v) {
     return temp;
 }
 
+std::vector<double> operator/(const std::vector<double> &v, double gain) {
+    std::vector<double> temp(v.size());
+    for (int i = 0; i < v.size(); ++i) {
+        temp[i] = v[i] / gain;
+    }
+    return temp;
+}
+
 void SwarmCtrl::setBorders(const std::vector<double> &borders) {
     upper_boundary = borders[0];
     lower_boundary = borders[1];
@@ -128,6 +136,10 @@ void SwarmCtrl::setBorders(const std::vector<double> &borders) {
     boundary_limit.push_back(left_boundary);
 }
 
+void SwarmCtrl::setRepParam(double repulsion) {
+    rep_ = repulsion;
+}
+
 void SwarmCtrl::setMaxIteration(const int maxIter) {
     maxIter_ = maxIter;
 }
@@ -136,7 +148,7 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
                                                   const std::vector<double> &yourPosition) const {
     // Number of drones.
     unsigned int n = initialPositionSwarm.size() + 1;
-    std::vector<double> U(2, 0), pos(2, 0), temp(4, 0);
+    std::vector<double> U(2, 0), pos(2, 0), temp(4, 0), Urep(2, 0), Ubnd(2, 0);
     std::vector<std::vector<double>> swarm_coords(n, std::vector<double>(4, 0)), Uvec(n, std::vector<double>(2, 0));
     // Initialize
     for (int i = 0; i < n - 1; ++i) {
@@ -152,33 +164,40 @@ std::vector<double> SwarmCtrl::getOptimalPosition(const std::vector<std::vector<
         for (int j = 0; j < n; ++j) {
             U[0] = 0;
             U[1] = 0;
+            Urep[0] = 0;
+            Urep[1] = 0;
+            Ubnd[0] = 0;
+            Ubnd[1] = 0;
             // Compute drone repulsion
             for (int k = 0; k < n; ++k) {
                 if (k == j) {
                     continue;
                 }
-                U += rep_*repulsive(swarm_coords[k], swarm_coords[j]);
+                Urep += rep_ * repulsive(swarm_coords[k], swarm_coords[j]);
             }
             // Border computation
-            U += boundary(swarm_coords[j], boundary_limit);
-            Uvec[j] = U;
+            Ubnd += boundary(swarm_coords[j], boundary_limit);
+            U = Urep + Ubnd;
+            Uvec[j] = adaptiveRate(vecNorm(U)) * U;
         }
         // System dynamic update
         for (int j = 0; j < n; ++j) {
             auto X = sysUpdate(swarm_coords[j], Uvec[j]);
             if (std::abs(swarm_coords[j][2] - X[2]) > 50 or std::abs(swarm_coords[j][3] - X[3]) > 50) {
                 throw "Optimization diverge";
-            } else if (std::abs(swarm_coords[j][2] - X[2]) < 1e-10 and std::abs(swarm_coords[j][3] - X[3]) < 1e-10 and
-                       std::abs(X[0]) < 1e-10 and std::abs(X[1]) < 1e-10) {
-                pos[0] = swarm_coords[n - 1][2];
-                pos[1] = swarm_coords[n - 1][3];
-                return pos;
             }
+//            } else if (vecNorm(Uvec[j]) < 1e-5) {
+//                pos[0] = swarm_coords[n - 1][2];
+//                pos[1] = swarm_coords[n - 1][3];
+//                printVec(swarm_coords);
+//                return pos;
+//            }
             swarm_coords[j] = X;
         }
     }
     pos[0] = swarm_coords[n - 1][2];
     pos[1] = swarm_coords[n - 1][3];
+    printVec(swarm_coords);
     return pos;
 }
 
@@ -192,29 +211,27 @@ std::vector<double> SwarmCtrl::getLocalGradientDirection(const std::vector<std::
     return U;
 }
 
-std::vector<double> SwarmCtrl::sysUpdate(std::vector<double> X, std::vector<double> U) const {
-    double ax,ay;
-    ax=adaptifRate(U[0]);
-    ay=adaptifRate(U[1]);
-    
-    std::vector<double> temp(4, 0);
-    temp[0] = -X[0] + U[0]; //Vx
-    temp[1] = -X[1] + U[1]; //Vy
-    temp[2] = X[2] + X[0] * ax; //X
-    temp[3] = X[3] + X[1] * ay; //Y
-    return temp;
-}
-
-double SwarmCtrl::adaptifRate(double a) {
-    if (std::abs(a) < 1e-6) {
-        a = 1e-6;
-    } else if (std::abs(a) > 1e2) {
-        a = 1e2;
+double SwarmCtrl::adaptiveRate(double norm) {
+    double S = 1e-4;
+    if (norm < S) {
+        return 1 / S;
     }
-    return 1e-1/std::abs(a);
+    return 1 / norm;
 }
 
-void SwarmCtrl::setRepParam(double repulsion) {
-    rep_=repulsion;
+double SwarmCtrl::vecNorm(const std::vector<double> &vec) const {
+    double norm = 0;
+    for (const auto &it : vec) {
+        norm += pow(it, 2);
+    }
+    return sqrt(norm);
+}
 
+std::vector<double> SwarmCtrl::sysUpdate(std::vector<double> X, std::vector<double> U) const {
+    std::vector<double> temp(4, 0);
+    temp[0] = 0.9 * X[0] + 0.1 * U[0]; //Vx
+    temp[1] = 0.9 * X[1] + 0.1 * U[1]; //Vy
+    temp[2] = X[2] + 0.1 * X[0]; //X
+    temp[3] = X[3] + 0.1 * X[1]; //Y
+    return temp;
 }
